@@ -1,0 +1,33 @@
+# Logs & Cache
+logs/
+*.log
+*.cache
+
+# Dependencies
+node_modules/
+venv/
+
+# Build output
+dist/
+build/
+
+# OS junk files
+.DS_Store
+Thumbs.db
+
+# Editor config & cache
+.vscode/
+.idea/
+*.sublime-project
+
+# Sensitive config (DO NOT UPLOAD SECRET!)
+.env
+config.json
+secret.yaml
+
+# Local database
+*.sqlite
+
+# Compiled & archive files
+*.zip
+*.exe

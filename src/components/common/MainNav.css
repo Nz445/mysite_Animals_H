@@ -1,0 +1,83 @@
+.main-tool-bar {
+    height: 75px;
+    background: #fff;
+    color: #0e100f;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    width: 100%;
+    left: 0;
+    top: 0;
+    transition: ease .4s;
+    z-index: 50;
+    box-shadow: 0 8px 30px rgba(14, 16, 15, 0.08);
+}
+
+.main-tool-bar--scrolled {
+    height: 60px
+    
+}
+
+.toolbar-inner {
+    width: 100%;
+    max-width: 1440px;
+    padding: 0 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px
+}
+
+.brand {
+    display: flex;
+    gap: 12px;
+    align-items: center
+}
+
+.logo-badge {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: var(--blue);
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 22px
+}
+
+.brand-name {
+    font-weight: 800;
+    font-size: 20px
+}
+
+.brand-slogan {
+    color: var(--sub)
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px
+}
+
+.nav-link {
+    padding: 10px 14px;
+    border-radius: 999px
+}
+
+.nav-link.active {
+    background: rgba(255, 255, 255, .35);
+    color: #0e100f;
+    font-weight: 700
+}
+
+@media (max-width: 640px) {
+    .nav-links {
+        display: none
+    }
+
+    .toolbar-inner {
+        justify-content: flex-start
+    }
+}
