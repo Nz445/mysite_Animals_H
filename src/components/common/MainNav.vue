@@ -9,12 +9,17 @@
         </div>
       </div>
 
-      <nav class="nav-links">
+      <button class="nav-menu-btn" type="button" :aria-expanded="menuOpen" aria-label="打开菜单" @click="toggleMenu">
+        <img src="/svg/菜单.svg" alt="菜单" class="nav-menu-icon" />
+      </button>
+
+      <nav class="nav-links" :class="{ 'nav-links--open': menuOpen }">
         <router-link
           v-for="item in items"
           :key="item"
           :to="itemPaths[item] || '/'"
           :class="['nav-link', { active: item === active }]"
+          @click="closeMenu"
         >
           {{ item }}
         </router-link>
@@ -38,7 +43,11 @@ const itemPaths = {
 }
 
 const scrolled = ref(false)
+const menuOpen = ref(false)
 let onScroll
+
+const toggleMenu = () => { menuOpen.value = !menuOpen.value }
+const closeMenu = () => { menuOpen.value = false }
 
 onMounted(() => {
   onScroll = () => {

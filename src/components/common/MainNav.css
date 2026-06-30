@@ -16,8 +16,7 @@
 }
 
 .main-tool-bar--scrolled {
-    height: 60px
-    
+    height: 60px;
 }
 
 .toolbar-inner {
@@ -27,13 +26,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 24px
+    gap: 24px;
+    position: relative;
 }
 
 .brand {
     display: flex;
     gap: 12px;
-    align-items: center
+    align-items: center;
 }
 
 .logo-badge {
@@ -44,40 +44,128 @@
     display: grid;
     place-items: center;
     color: #fff;
-    font-size: 22px
+    font-size: 22px;
 }
 
 .brand-name {
     font-weight: 800;
-    font-size: 20px
+    font-size: 20px;
 }
 
 .brand-slogan {
-    color: var(--sub)
+    color: var(--sub);
 }
 
 .nav-links {
     display: flex;
-    gap: 20px
+    gap: 20px;
 }
 
 .nav-link {
     padding: 10px 14px;
-    border-radius: 999px
+    border-radius: 999px;
 }
 
 .nav-link.active {
     background: rgba(255, 255, 255, .35);
     color: #0e100f;
-    font-weight: 700
+    font-weight: 700;
+}
+
+.nav-menu-btn {
+    display: none;
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin-left: auto;
+    cursor: pointer;
+}
+
+.nav-menu-icon {
+    width: 10vw;
+    height: 10vw;
+    min-width: 28px;
+    min-height: 28px;
+    display: block;
 }
 
 @media (max-width: 640px) {
-    .nav-links {
-        display: none
+    .main-tool-bar {
+        height: auto;
+        min-height: 11vh;
+        padding: 1vh 0;
+    }
+
+    .main-tool-bar--scrolled {
+        height: auto;
+        min-height: 10vh;
     }
 
     .toolbar-inner {
-        justify-content: flex-start
+        justify-content: flex-start;
+        align-items: center;
+        gap: 3vw;
+        padding: 0 4vw;
+    }
+
+    .brand {
+        gap: 2.5vw;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .logo-badge {
+        width: 11vw;
+        height: 11vw;
+        min-width: 42px;
+        min-height: 42px;
+        border-radius: 3vw;
+        font-size: 5vw;
+        flex-shrink: 0;
+    }
+
+    .brand-name {
+        font-size: 4.8vw;
+        line-height: 1.1;
+    }
+
+    .brand-slogan {
+        font-size: 3.2vw;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 42vw;
+    }
+
+    .nav-menu-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+
+    .nav-links {
+        display: none;
+        position: absolute;
+        right: 4vw;
+        top: calc(100% + 1.2vh);
+        flex-direction: column;
+        gap: 1.2vh;
+        padding: 2vh 3vw;
+        background: rgba(255, 255, 255, 0.96);
+        border-radius: 3vw;
+        box-shadow: 0 1.5vh 3vh rgba(14, 16, 15, 0.12);
+        min-width: 34vw;
+        z-index: 60;
+    }
+
+    .nav-links.nav-links--open {
+        display: flex;
+    }
+
+    .nav-link {
+        padding: 1vh 2.4vw;
+        font-size: 3.6vw;
+        white-space: nowrap;
     }
 }
