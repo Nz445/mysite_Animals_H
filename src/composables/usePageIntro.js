@@ -32,7 +32,7 @@ export function usePageIntro({ showIntro, loadingRef, navRef, heroRef }) {
       onComplete: () => {
         introTimer = window.setTimeout(() => {
           showIntro.value = false
-        }, 200)
+        }, 800)
       },
     })
   }

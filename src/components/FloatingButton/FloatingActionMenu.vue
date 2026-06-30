@@ -8,8 +8,10 @@
       :aria-label="item.label"
       @click="handleAction(item)"
     >
-      <component :is="item.icon" v-if="item.icon" />
+      <img v-if="item.iconSrc" :src="item.iconSrc" :alt="item.label" class="fab-icon" />
+      <component :is="item.icon" v-else-if="item.icon" />
       <span v-else-if="item.iconSvg" v-html="item.iconSvg"></span>
+      <span class="fab-tooltip">{{ item.label }}</span>
     </button>
 
     <button

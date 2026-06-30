@@ -81,9 +81,9 @@ const downloadCurrentImage = () => {
 }
 
 const fabActions = [
-  { key: 'home', label: '返回首页', icon: 'home', onClick: () => (window.location.href = '/') },
-  { key: 'detail', label: '跳转详情', icon: 'detail', onClick: () => (window.location.href = '/pets') },
-  { key: 'share', label: '分享', icon: 'share', onClick: sharePage },
+  { key: 'home', label: '返回首页', iconSrc: '/svg/fanhui_fanhui.svg', onClick: () => (window.location.href = '/') },
+  { key: 'detail', label: '跳转详情', iconSrc: '/svg/tiaozhuan.svg', onClick: () => (window.location.href = '/pets') },
+  { key: 'share', label: '分享', iconSrc: '/svg/fenxiang.svg', onClick: sharePage },
 ]
 
 onMounted(() => {

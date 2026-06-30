@@ -51,7 +51,36 @@
     scale: 0;
 }
 
-.fab-item svg { width: 2vw; height: 2vw; min-width: 18px; min-height: 18px; }
+.fab-item svg,
+.fab-icon {
+    width: 2vw;
+    height: 2vw;
+    min-width: 18px;
+    min-height: 18px;
+}
+
+.fab-tooltip {
+    position: absolute;
+    left: 50%;
+    bottom: 115%;
+    transform: translateX(-50%) translateY(0.6vh);
+    padding: 0.55vh 1vw;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.92);
+    color: #fff;
+    font-size: 0.75rem;
+    line-height: 1;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fab-item:hover .fab-tooltip,
+.fab-item:focus-visible .fab-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
 
 .fab:focus-visible,
 .fab-item:focus-visible {
