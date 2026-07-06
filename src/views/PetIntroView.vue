@@ -14,7 +14,8 @@
     </div>
 
     <div class="section">
-
+      <h2>宠物介绍</h2>
+      <p>这里展示萌宠的真实照片，点击后也可扩展为更多介绍内容。</p>
     </div>
 
     <FloatingActionMenu :actions="fabActions" />

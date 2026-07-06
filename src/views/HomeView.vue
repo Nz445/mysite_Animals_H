@@ -4,7 +4,7 @@
     <MainNav :items="navItems" active="首页" />
     <main>
       <section ref="heroRef" class="hero glass-card">
-        <div class="hero-left"><el-tag class="pill-tag pink">宠物综合服务主页</el-tag><h1>这里有你喜欢的小毛球</h1><p>发现可爱、了解性格、记录陪伴。让每一只宠物都被温柔看见，从档案、领养到社区互动，一站式认识它们的故事。</p><div class="hero-actions"><el-button type="primary" class="btn-primary">立即查看宠物</el-button><el-button class="btn-outline">了解领养信息</el-button></div></div>
+        <div class="hero-left"><el-tag class="pill-tag pink">宠物综合服务主页</el-tag><h1>这里有你喜欢的小毛球</h1><p>发现可爱、了解性格、记录陪伴。让每一只宠物都被温柔看见，从档案、领养到社区互动，一站式认识它们的故事。</p><div class="hero-actions"><el-button type="primary" class="btn-primary">立即查看宠物</el-button><el-button class="btn-outline">了解领养信息</el-button><el-button class="btn-outline" @click="goGame1">小游戏 1</el-button><el-button class="btn-outline" @click="goGame2">小游戏 2</el-button></div></div>
         <div class="hero-art"><div class="hero-art-card"><div class="pet-illustration"><div class="pet-face cat"></div><div class="pet-face dog"></div><div class="pet-face rabbit"></div></div></div></div>
       </section>
       <section class="section-title"><h2>宠物介绍</h2><p>每一只宠物都有自己的故事</p></section>
@@ -18,6 +18,7 @@
 
 <script setup>
 import { onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import gsap from 'gsap'
 import './HomeView.css'
 import PageIntro from '../components/Loading/LoadingIntro.vue'
@@ -39,6 +40,7 @@ const highlights = [
   { icon: '◔', title: '互动习惯', desc: '喜欢互动，也愿意慢慢熟悉新朋友' },
   { icon: '☘', title: '喜爱食物', desc: '最爱的零食是鸡肉条和小鱼干' },
 ]
+const router = useRouter()
 const heroRef = ref(null)
 const navRef = ref(null)
 const loadingRef = ref(null)
@@ -46,6 +48,9 @@ const showIntro = ref(true)
 let resizeHandler
 
 const { playSplit, cleanup } = usePageIntro({ showIntro, loadingRef, navRef, heroRef })
+
+const goGame1 = () => router.push('/games/game2d')
+const goGame2 = () => router.push('/games/game3d')
 
 onMounted(() => {
   resizeHandler = () => {}
