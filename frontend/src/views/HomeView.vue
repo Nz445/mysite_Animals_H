@@ -31,7 +31,7 @@ import { usePageIntro } from '../composables/usePageIntro.js'
 const navItems = ['首页', '宠物介绍', '领养信息', '社区', '联系我们']
 const pets = ref([])
 const highlights = ref([])
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://152.136.232.134:3000'
 
 async function loadHomeData() {
   const response = await fetch(`${API_BASE}/api/home`)

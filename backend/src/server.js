@@ -111,6 +111,6 @@ const server = http.createServer(async (req, res) => {
 });
 
 // 启动服务并打印访问地址。
-server.listen(PORT, () => {
-  console.log(`Backend running at http://localhost:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Backend running at http://0.0.0.0:${PORT}`);
 });
