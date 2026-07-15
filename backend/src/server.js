@@ -1,6 +1,7 @@
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
+import { highlights, pets } from './data/homeData.js';
 
 // 后端服务默认端口，可通过环境变量 PORT 覆盖。
 const PORT = process.env.PORT || 3000;
@@ -86,6 +87,11 @@ const server = http.createServer(async (req, res) => {
   // 简单连通性测试接口，前端联调时可先用它验证请求链路。
   if (url.pathname === '/api/ping') {
     sendJson(res, 200, { message: 'pong' });
+    return;
+  }
+
+  if (url.pathname === '/api/home') {
+    sendJson(res, 200, { pets, highlights });
     return;
   }
 
