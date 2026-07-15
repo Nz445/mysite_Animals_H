@@ -27,15 +27,14 @@ import PetCardGrid from '../components/home/PetCardGrid.vue'
 import SectionHighlights from '../components/home/SectionHighlights.vue'
 import SiteFooter from '../components/common/SiteFooter.vue'
 import { usePageIntro } from '../composables/usePageIntro.js'
+import { getHomeData } from '../api/home.js'
 
 const navItems = ['首页', '宠物介绍', '领养信息', '社区', '联系我们']
 const pets = ref([])
 const highlights = ref([])
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://152.136.232.134:3000'
 
 async function loadHomeData() {
-  const response = await fetch(`${API_BASE}/api/home`)
-  const data = await response.json()
+  const data = await getHomeData()
   pets.value = data.pets || []
   highlights.value = data.highlights || []
 }
@@ -54,7 +53,11 @@ const goGame2 = () => router.push('/games/game3d')
 onMounted(async () => {
   resizeHandler = () => {}
   window.addEventListener('resize', resizeHandler)
-  await loadHomeData()
+  try {
+    await loadHomeData()
+  } catch (error) {
+    console.error('加载首页数据失败：', error)
+  }
   playSplit()
 })
 onBeforeUnmount(() => {

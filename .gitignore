@@ -1,0 +1,25 @@
+# Node.js
+node_modules/
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build output
+/dist
+/frontend/dist
+/backend/dist
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Temporary or upload-filtered folder
+teyun_20/
