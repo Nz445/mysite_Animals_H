@@ -1,8 +1,9 @@
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
+import pool from './db/pool.js';
 import { registerHomeRoutes } from './routes/home.js';
-import { chatMessages, addChatMessage } from './data/chatData.js';
+import { attachChatHub } from './ws/chatHub.js';
 
 // 后端服务默认端口，可通过环境变量 PORT 覆盖。
 const PORT = process.env.PORT || 3000;
@@ -91,47 +92,28 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (url.pathname === '/api/home') {
-    const data = await registerHomeRoutes('/api/home');
-    sendJson(res, 200, data);
-    return;
-  }
-
-  if (url.pathname === '/api/pets') {
-    const data = await registerHomeRoutes('/api/pets');
-    sendJson(res, 200, data);
-    return;
-  }
-
-  if (url.pathname === '/api/highlights') {
-    const data = await registerHomeRoutes('/api/highlights');
-    sendJson(res, 200, data);
-    return;
+  if (url.pathname === '/api/home' || url.pathname === '/api/pets' || url.pathname === '/api/highlights') {
+    const data = await registerHomeRoutes(url.pathname)
+    sendJson(res, 200, data)
+    return
   }
 
   if (url.pathname === '/api/chat/messages' && req.method === 'GET') {
-    sendJson(res, 200, { messages: chatMessages });
-    return;
+    const result = await pool.query('SELECT * FROM chat_messages ORDER BY id ASC')
+    sendJson(res, 200, { messages: result.rows })
+    return
   }
 
   if (url.pathname === '/api/chat/messages' && req.method === 'POST') {
-    let body = '';
-    for await (const chunk of req) body += chunk;
-    const data = JSON.parse(body || '{}');
-    const message = {
-      id: Date.now(),
-      nickname: data.nickname || '游客',
-      text: data.text || '',
-      time: new Date().toLocaleTimeString(),
-    };
-    addChatMessage(message);
-    sendJson(res, 200, { ok: true, message });
-    return;
-  }
-
-  if (url.pathname === '/api/home') {
-    sendJson(res, 200, { message: 'home routes handled in registerHomeRoutes' });
-    return;
+    let body = ''
+    for await (const chunk of req) body += chunk
+    const data = JSON.parse(body || '{}')
+    const result = await pool.query(
+      'INSERT INTO chat_messages (nickname, text, created_at) VALUES ($1, $2, NOW()) RETURNING *',
+      [data.nickname || '游客', data.text || '']
+    )
+    sendJson(res, 200, { ok: true, message: result.rows[0] })
+    return
   }
 
   // 允许通过 /public/* 访问后端静态资源。
@@ -148,6 +130,10 @@ const server = http.createServer(async (req, res) => {
 
   sendJson(res, 404, { message: 'Not found' });
 });
+
+// 挂载 WebSocket 聊天中心。
+attachChatHub(server, pool)
+
 
 // 启动服务并打印访问地址。
 server.listen(PORT, '0.0.0.0', () => {
