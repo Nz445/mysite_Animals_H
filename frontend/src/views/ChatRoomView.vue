@@ -11,6 +11,7 @@
           <span>在线：{{ onlineCount }}</span>
           <span>系统消息：{{ systemCount }}</span>
           <span>输入中：{{ typingText }}</span>
+          <span>连接：{{ connectionStatus }}</span>
         </div>
       </header>
 
@@ -38,7 +39,8 @@ import { onBeforeUnmount, onMounted, ref, computed, nextTick } from 'vue'
 import MainNav from '../components/common/MainNav.vue'
 import './ChatRoomView.css'
 
-const wsUrl = import.meta.env.VITE_WS_URL || 'ws://152.136.232.134:3000/ws/chat'
+const wsUrl = import.meta.env.VITE_WS_URL || `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.hostname}:3000/ws/chat`
+const apiBaseUrl = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:3000`
 const navItems = ['首页', '宠物介绍', '社区']
 const nickname = ref('游客')
 const text = ref('')
@@ -46,6 +48,7 @@ const messages = ref([])
 const onlineCount = ref(0)
 const typingUsers = ref([])
 const messageListRef = ref(null)
+const connectionStatus = ref('连接中')
 let socket
 
 const systemCount = computed(() => messages.value.filter(item => item.type === 'system').length)
@@ -68,14 +71,42 @@ function onTyping() {
   }
 }
 
-function sendMessage() {
-  if (!text.value.trim() || socket?.readyState !== WebSocket.OPEN) return
-  socket.send(JSON.stringify({ type: 'message', nickname: nickname.value || '游客', text: text.value.trim() }))
-  text.value = ''
+async function sendMessage() {
+  const payload = { nickname: nickname.value || '游客', text: text.value.trim() }
+  if (!payload.text) return
+
+  try {
+    if (socket?.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: 'message', ...payload }))
+    } else {
+      const response = await fetch(`${apiBaseUrl}/api/chat/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data?.message || '发送失败')
+      messages.value.push(normalizeMessage(data.message))
+    }
+    text.value = ''
+    connectionStatus.value = '已发送'
+    scrollBottom()
+  } catch (error) {
+    connectionStatus.value = error?.message || '发送失败'
+  }
 }
 
 onMounted(() => {
   socket = new WebSocket(wsUrl)
+  socket.onopen = () => {
+    connectionStatus.value = '已连接'
+  }
+  socket.onclose = () => {
+    connectionStatus.value = '已断开'
+  }
+  socket.onerror = () => {
+    connectionStatus.value = '连接错误'
+  }
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data)
     if (data.type === 'snapshot') {
