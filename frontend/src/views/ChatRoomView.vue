@@ -39,8 +39,8 @@ import { onBeforeUnmount, onMounted, ref, computed, nextTick } from 'vue'
 import MainNav from '../components/common/MainNav.vue'
 import './ChatRoomView.css'
 
-const apiBaseUrl = import.meta.env.VITE_API_URL || ''
-const wsUrl = import.meta.env.VITE_WS_URL || `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/chat`
+const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://api.wsnz44.top'
+const wsUrl = import.meta.env.VITE_WS_URL || 'wss://api.wsnz44.top/ws/chat'
 const navItems = ['首页', '宠物介绍', '社区']
 const nickname = ref('游客')
 const text = ref('')
@@ -79,7 +79,7 @@ async function sendMessage() {
     if (socket?.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify({ type: 'message', ...payload }))
     } else {
-      const response = await fetch(`${apiBaseUrl || window.location.origin}/api/chat/messages`, {
+      const response = await fetch(`${apiBaseUrl}/api/chat/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
