@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://wsnz44.top/api/$1"
+    }
+  ]
+}
