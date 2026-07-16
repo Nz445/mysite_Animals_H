@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // 统一请求封装：配置后端地址、超时、错误处理。
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://152.136.232.134:3000'
+const API_BASE = import.meta.env.VITE_API_BASE || window.location.origin
 
 const request = axios.create({
   baseURL: API_BASE,

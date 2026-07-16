@@ -1,13 +1,15 @@
-import http from 'node:http';
-import { readFile } from 'node:fs/promises';
-import { extname, join } from 'node:path';
-import pool from './db/pool.js';
-import { registerHomeRoutes } from './routes/home.js';
-import { attachChatHub } from './ws/chatHub.js';
+import http from 'node:http'
+import { readFile } from 'node:fs/promises'
+import { extname, join } from 'node:path'
+import pool from './db/pool.js'
+import { registerHomeRoutes } from './routes/home.js'
+import { attachChatHub } from './ws/chatHub.js'
 
 const ALLOWED_ORIGINS = new Set([
   'http://localhost:5173',
   'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
   'https://wsnz44.top',
 ])
 
@@ -21,10 +23,11 @@ const ensureChatMessagesTable = async () => {
     )
   `)
 }
+
 // 后端服务默认端口，可通过环境变量 PORT 覆盖。
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000
 // 指向后端 public 目录，用于按需提供静态资源。
-const PUBLIC_DIR = new URL('../public/', import.meta.url);
+const PUBLIC_DIR = new URL('../public/', import.meta.url)
 
 // 文件扩展名到 MIME 类型的映射，帮助浏览器正确解析静态资源。
 const mimeTypes = {
@@ -36,8 +39,8 @@ const mimeTypes = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif'
-};
+  '.gif': 'image/gif',
+}
 
 // 统一返回 JSON，便于后续前后端通过 API 交互。
 function getCorsHeaders(origin) {
@@ -87,9 +90,13 @@ async function serveStaticFile(res, pathname, origin = '') {
 
 // 创建一个最基础的 HTTP 服务，后续可替换成 Express/Fastify。
 const server = http.createServer(async (req, res) => {
+  if (req.headers.origin && !ALLOWED_ORIGINS.has(req.headers.origin)) {
+    sendJson(res, 403, { message: 'Origin not allowed' }, req.headers.origin)
+    return
+  }
   if (!req.url) {
-    sendJson(res, 400, { message: 'Bad request' });
-    return;
+    sendJson(res, 400, { message: 'Bad request' }, '')
+    return
   }
 
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`)
@@ -102,14 +109,14 @@ const server = http.createServer(async (req, res) => {
       'Access-Control-Allow-Headers': 'Content-Type',
       ...getCorsHeaders(origin),
     })
-    res.end();
-    return;
+    res.end()
+    return
   }
 
   // 健康检查接口，用于确认后端是否正常启动。
   if (url.pathname === '/api/health') {
     sendJson(res, 200, { ok: true, service: 'animals-h-backend' }, origin)
-    return;
+    return
   }
 
   // 简单连通性测试接口，前端联调时可先用它验证请求链路。
