@@ -1,7 +1,8 @@
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
-import { highlights, pets } from './data/homeData.js';
+import { registerHomeRoutes } from './routes/home.js';
+import { chatMessages, addChatMessage } from './data/chatData.js';
 
 // 后端服务默认端口，可通过环境变量 PORT 覆盖。
 const PORT = process.env.PORT || 3000;
@@ -91,7 +92,45 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (url.pathname === '/api/home') {
-    sendJson(res, 200, { pets, highlights });
+    const data = await registerHomeRoutes('/api/home');
+    sendJson(res, 200, data);
+    return;
+  }
+
+  if (url.pathname === '/api/pets') {
+    const data = await registerHomeRoutes('/api/pets');
+    sendJson(res, 200, data);
+    return;
+  }
+
+  if (url.pathname === '/api/highlights') {
+    const data = await registerHomeRoutes('/api/highlights');
+    sendJson(res, 200, data);
+    return;
+  }
+
+  if (url.pathname === '/api/chat/messages' && req.method === 'GET') {
+    sendJson(res, 200, { messages: chatMessages });
+    return;
+  }
+
+  if (url.pathname === '/api/chat/messages' && req.method === 'POST') {
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    const data = JSON.parse(body || '{}');
+    const message = {
+      id: Date.now(),
+      nickname: data.nickname || '游客',
+      text: data.text || '',
+      time: new Date().toLocaleTimeString(),
+    };
+    addChatMessage(message);
+    sendJson(res, 200, { ok: true, message });
+    return;
+  }
+
+  if (url.pathname === '/api/home') {
+    sendJson(res, 200, { message: 'home routes handled in registerHomeRoutes' });
     return;
   }
 

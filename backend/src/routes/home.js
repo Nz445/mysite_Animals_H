@@ -1,20 +1,24 @@
-import { highlights, pets } from '../data/homeData.js'
+import pool from '../db/pool.js'
 
-// 首页相关路由：统一返回宠物与首页亮点数据。
-export function registerHomeRoutes(server) {
-  server.on('request', (req, res) => {
-    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`)
-    if (req.method === 'GET' && url.pathname === '/api/home') {
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' })
-      res.end(JSON.stringify({ pets, highlights }))
-    }
-    if (req.method === 'GET' && url.pathname === '/api/pets') {
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' })
-      res.end(JSON.stringify({ pets }))
-    }
-    if (req.method === 'GET' && url.pathname === '/api/highlights') {
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' })
-      res.end(JSON.stringify({ highlights }))
-    }
-  })
+// 根据路径返回对应的数据库数据，由 server.js 调用。
+export async function registerHomeRoutes(pathname) {
+  if (pathname === '/api/home') {
+    const [petsResult, highlightsResult] = await Promise.all([
+      pool.query('SELECT * FROM pets ORDER BY id ASC'),
+      pool.query('SELECT * FROM highlights ORDER BY id ASC')
+    ])
+    return { pets: petsResult.rows, highlights: highlightsResult.rows }
+  }
+
+  if (pathname === '/api/pets') {
+    const result = await pool.query('SELECT * FROM pets ORDER BY id ASC')
+    return { pets: result.rows }
+  }
+
+  if (pathname === '/api/highlights') {
+    const result = await pool.query('SELECT * FROM highlights ORDER BY id ASC')
+    return { highlights: result.rows }
+  }
+
+  return null
 }

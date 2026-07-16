@@ -40,6 +40,7 @@ defineProps({
 const itemPaths = {
   首页: '/',
   宠物介绍: '/pets',
+  社区: '/chat',
 }
 
 const scrolled = ref(false)
