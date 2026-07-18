@@ -4,7 +4,7 @@
 
     <main class="chat-main">
       <header class="chat-header glass-card">
-   
+
         <h1>社区聊天室</h1>
 
       </header>
@@ -81,6 +81,7 @@ const isRegisterMode = ref(false)
 const currentUser = ref(null)
 const authForm = ref({ username: '', password: '', confirmPassword: '' })
 let socket
+let historyPollTimer
 
 const systemCount = computed(() => messages.value.filter(item => item.type === 'system').length)
 const typingText = computed(() => typingUsers.value.length ? typingUsers.value.join('、') + ' 正在输入' : '无人')
@@ -195,6 +196,21 @@ async function loadChatHistory() {
     console.error('loadChatHistory failed:', error)
   }
 }
+
+function startHistoryPolling() {
+  if (historyPollTimer) return
+  historyPollTimer = window.setInterval(() => {
+    if (isAuthed.value) loadChatHistory()
+  }, 5000)
+}
+
+function stopHistoryPolling() {
+  if (historyPollTimer) {
+    clearInterval(historyPollTimer)
+    historyPollTimer = undefined
+  }
+}
+
 
 // 登录
 async function handleLogin() {
@@ -318,8 +334,12 @@ onMounted(async () => {
   if (authed) {
     await loadChatHistory()
     connectSocket()
+    startHistoryPolling()
   }
 })
 
-onBeforeUnmount(() => socket?.close())
+onBeforeUnmount(() => {
+  stopHistoryPolling()
+  socket?.close()
+})
 </script>
