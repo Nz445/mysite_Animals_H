@@ -290,21 +290,18 @@ function connectSocket() {
   socket.onerror = () => {
     connectionStatus.value = '连接错误'
   }
-  socket.onmessage = (event) => {
+  socket.onmessage = async (event) => {
     const data = JSON.parse(event.data)
     if (data.type === 'snapshot') {
       messages.value = (data.messages || []).map(normalizeMessage)
       onlineCount.value = data.onlineCount || 0
+      scrollBottom()
+      return
     }
-    if (data.type === 'message') {
-      const nextMessages = [...messages.value.flatMap(group => group.msgList), normalizeMessage(data.message)]
-      messages.value = groupChatMessage(nextMessages)
+    if (data.type === 'message' || data.type === 'system') {
       onlineCount.value = data.onlineCount || onlineCount.value
-    }
-    if (data.type === 'system') {
-      const nextMessages = [...messages.value.flatMap(group => group.msgList), normalizeMessage({ id: Date.now(), type: 'system', text: data.text, time: data.time })]
-      messages.value = groupChatMessage(nextMessages)
-      onlineCount.value = data.onlineCount || onlineCount.value
+      await loadChatHistory()
+      return
     }
     if (data.type === 'typing') {
       typingUsers.value = data.users || []
