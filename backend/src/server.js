@@ -37,12 +37,8 @@ const ensureUsersTable = async () => {
   `)
 }
 
-const jsonResponse = (res, origin = '') => ({
-  ok: (statusCode, data) => sendJson(res, statusCode, data, origin),
-})
-
-const createToken = () => crypto.randomBytes(24).toString('hex') //生成随机 token
-const hashPassword = (password) => crypto.createHash('sha256').update(password).digest('hex') //对密码进行哈希处理
+const createToken = () => crypto.randomBytes(24).toString('hex')
+const hashPassword = (password) => crypto.createHash('sha256').update(password).digest('hex')
 
 // 后端服务默认端口，可通过环境变量 PORT 覆盖。
 const PORT = process.env.PORT || 3000
@@ -143,7 +139,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
       'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       ...getCorsHeaders(origin),
     })
     res.end()
