@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // 统一请求封装：配置后端地址、超时、错误处理。
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://api.wsnz44.top'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://api.wsnz44.top'
 
 const request = axios.create({
   baseURL: API_BASE,

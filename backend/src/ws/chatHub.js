@@ -7,6 +7,19 @@ export function attachChatHub(server, pool) {
   const typingUsers = new Set()
   const clientNicknames = new WeakMap()
 
+  //从 URL / Header 取 token
+  const getTokenFromRequest = (req) => {
+    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`)
+    const authHeader = req.headers.authorization || ''
+    return authHeader.startsWith('Bearer ') ? authHeader.slice(7) : url.searchParams.get('token') || ''
+  }
+  //校验 token 是否有效
+  const verifyToken = async (token) => {
+    if (!token) return null
+    const result = await pool.query('SELECT id, username, token FROM users WHERE token = $1 LIMIT 1', [token])
+    return result.rows[0] || null
+  }
+
   const getOnlineCount = () => clients.size
 
   const broadcast = (payload) => {
@@ -45,18 +58,32 @@ export function attachChatHub(server, pool) {
     }
   }
 
-  server.on('upgrade', (req, socket, head) => {
+  server.on('upgrade', async (req, socket, head) => {
     const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`)
     if (url.pathname !== '/ws/chat') {
       socket.destroy()
       return
     }
+     
+    const token = getTokenFromRequest(req)
+    const user = await verifyToken(token)
+    // 没 token 或 token 无效，拒绝升级为 WebSocket
+    if (!user) {
+      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
+      socket.destroy()
+      return
+    }
+
+    req.user = user
 
     wss.handleUpgrade(req, socket, head, async (ws) => {
+      ws.user = user
       clients.add(ws)
       try {
+        // 进来后先发历史消息
         await sendSnapshot(ws)
-        pushSystem('有用户进入聊天室')
+         // 广播系统消息
+        pushSystem(`${user.username} 进入聊天室`)
         broadcast({ type: 'online', onlineCount: getOnlineCount() })
       } catch (error) {
         ws.close(1011, 'Failed to load chat snapshot')
@@ -82,9 +109,17 @@ export function attachChatHub(server, pool) {
         }
 
         if (data.type === 'message') {
-          const nickname = (data.nickname || '游客').trim()
+          const nickname = (data.nickname || user.username || '游客').trim()
           const text = (data.text || '').trim()
+          const token = String(data.token || '').trim()
           if (!text) return
+          const currentUser = token ? await verifyToken(token) : user
+          if (!currentUser) {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ type: 'error', message: 'token 无效' }))
+            }
+            return
+          }
           try {
             const result = await pool.query(
               'INSERT INTO chat_messages (nickname, text, created_at) VALUES ($1, $2, NOW()) RETURNING id, nickname, text, created_at',

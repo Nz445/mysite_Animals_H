@@ -1,6 +1,7 @@
 import http from 'node:http'
 import { readFile } from 'node:fs/promises'
 import { extname, join } from 'node:path'
+import crypto from 'node:crypto'
 import pool from './db/pool.js'
 import { registerHomeRoutes } from './routes/home.js'
 import { attachChatHub } from './ws/chatHub.js'
@@ -23,6 +24,25 @@ const ensureChatMessagesTable = async () => {
     )
   `)
 }
+
+const ensureUsersTable = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      username VARCHAR(32) UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      token TEXT UNIQUE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `)
+}
+
+const jsonResponse = (res, origin = '') => ({
+  ok: (statusCode, data) => sendJson(res, statusCode, data, origin),
+})
+
+const createToken = () => crypto.randomBytes(24).toString('hex') //生成随机 token
+const hashPassword = (password) => crypto.createHash('sha256').update(password).digest('hex') //对密码进行哈希处理
 
 // 后端服务默认端口，可通过环境变量 PORT 覆盖。
 const PORT = process.env.PORT || 3000
@@ -70,6 +90,23 @@ function sendText(res, statusCode, text, origin = '', contentType = 'text/plain;
   res.end(text)
 }
 
+function parseJsonBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = ''
+    req.on('data', (chunk) => {
+      body += chunk
+    })
+    req.on('end', () => {
+      try {
+        resolve(body ? JSON.parse(body) : {})
+      } catch (error) {
+        reject(error)
+      }
+    })
+    req.on('error', reject)
+  })
+}
+
 // 提供 backend/public 下的静态文件，适合后续存放配置或资源。
 async function serveStaticFile(res, pathname, origin = '') {
   const filePath = join(PUBLIC_DIR.pathname, pathname)
@@ -113,6 +150,103 @@ const server = http.createServer(async (req, res) => {
     return
   }
 
+  if (url.pathname === '/api/auth/register' && req.method === 'POST') {
+    try {
+      const data = await parseJsonBody(req)
+      const username = String(data.username || '').trim()
+      const password = String(data.password || '')
+      const confirmPassword = String(data.confirmPassword || '')
+
+      // 验证用户名和密码是否为空
+      if (!username || !password) {
+        sendJson(res, 400, { ok: false, message: '用户名和密码不能为空' }, origin)
+        return
+      }
+      // 验证两次密码是否一致
+      if (password !== confirmPassword) {
+        sendJson(res, 400, { ok: false, message: '两次密码不一致' }, origin)
+        return
+      }
+
+      const passwordHash = hashPassword(password)
+      const token = createToken()
+
+       // 插入用户，并直接返回 token 给前端
+      const result = await pool.query(
+        'INSERT INTO users (username, password_hash, token) VALUES ($1, $2, $3) RETURNING id, username, token, created_at',
+        [username, passwordHash, token]
+      )
+
+      sendJson(res, 200, { ok: true, user: result.rows[0] }, origin)
+    } catch (error) {
+      console.error('POST /api/auth/register failed:', error)
+      sendJson(res, 500, { ok: false, message: '注册失败' }, origin)
+    }
+    return
+  }
+
+  if (url.pathname === '/api/auth/login' && req.method === 'POST') {
+    try {
+      const data = await parseJsonBody(req)
+      const username = String(data.username || '').trim()
+      const password = String(data.password || '')
+      // 先按用户名查用户
+      const result = await pool.query(
+        'SELECT id, username, password_hash, token, created_at FROM users WHERE username = $1 LIMIT 1',
+        [username]
+      )
+
+      const user = result.rows[0]
+
+      // 用户不存在或密码不对
+      if (!user || user.password_hash !== hashPassword(password)) {
+        sendJson(res, 401, { ok: false, message: '用户名或密码错误' }, origin)
+        return
+      }
+      // 没有 token 就补一个
+      const token = user.token || createToken()
+      if (!user.token) {
+        await pool.query('UPDATE users SET token = $1 WHERE id = $2', [token, user.id])
+      }
+
+      // 返回 token 给前端保存
+      sendJson(res, 200, {
+        ok: true,
+        user: { id: user.id, username: user.username, token, created_at: user.created_at },
+      }, origin)
+    } catch (error) {
+      console.error('POST /api/auth/login failed:', error)
+      sendJson(res, 500, { ok: false, message: '登录失败' }, origin)
+    }
+    return
+  }
+
+  if (url.pathname === '/api/auth/me' && req.method === 'GET') {
+    try {
+      const authHeader = req.headers.authorization || ''
+      const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : new URL(req.url, `http://${req.headers.host || 'localhost'}`).searchParams.get('token') || ''
+      if (!token) {
+        sendJson(res, 401, { ok: false, message: '未登录' }, origin)
+        return
+      }
+      // 根据 token 查用户
+      const result = await pool.query(
+        'SELECT id, username, token, created_at FROM users WHERE token = $1 LIMIT 1',
+        [token]
+      )
+      const user = result.rows[0]
+      if (!user) {
+        sendJson(res, 401, { ok: false, message: 'token 无效' }, origin)
+        return
+      }
+      sendJson(res, 200, { ok: true, user }, origin)
+    } catch (error) {
+      console.error('GET /api/auth/me failed:', error)
+      sendJson(res, 500, { ok: false, message: '校验失败' }, origin)
+    }
+    return
+  }
+
   // 健康检查接口，用于确认后端是否正常启动。
   if (url.pathname === '/api/health') {
     sendJson(res, 200, { ok: true, service: 'animals-h-backend' }, origin)
@@ -142,17 +276,30 @@ const server = http.createServer(async (req, res) => {
 
   if (url.pathname === '/api/chat/messages' && req.method === 'POST') {
     try {
-      let body = ''
-      for await (const chunk of req) body += chunk
-      const data = JSON.parse(body || '{}')
+      const data = await parseJsonBody(req)
       const nickname = String(data.nickname || '游客').trim() || '游客'
       const text = String(data.text || '').trim()
+      const token = String(data.token || req.headers.authorization?.replace('Bearer ', '') || '').trim()
+
+      if (!token) {
+        sendJson(res, 401, { ok: false, message: '请先登录' }, origin)
+        return
+      }
+
+      const userResult = await pool.query(
+        'SELECT id FROM users WHERE token = $1 LIMIT 1',
+        [token]
+      )
+      if (!userResult.rows[0]) {
+        sendJson(res, 401, { ok: false, message: 'token 无效' }, origin)
+        return
+      }
 
       if (!text) {
         sendJson(res, 400, { ok: false, message: '消息不能为空' }, origin)
         return
       }
-
+      // 写入聊天记录
       const result = await pool.query(
         'INSERT INTO chat_messages (nickname, text, created_at) VALUES ($1, $2, NOW()) RETURNING id, nickname, text, created_at',
         [nickname, text]
