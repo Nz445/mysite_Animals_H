@@ -42,6 +42,10 @@ export function attachChatHub(server, pool) {
     })
   }
 
+  const broadcastRefresh = () => {
+    broadcast({ type: 'refresh', onlineCount: getOnlineCount() })
+  }
+
   const formatMessage = (row) => ({
     ...row,
     time: row.time || (row.created_at ? new Date(row.created_at).toLocaleString('zh-CN', { hour12: false }) : ''),
@@ -126,6 +130,7 @@ export function attachChatHub(server, pool) {
               [nickname, text]
             )
             broadcast({ type: 'message', message: formatMessage(result.rows[0]), onlineCount: getOnlineCount() })
+            broadcastRefresh()
           } catch {
             if (ws.readyState === WebSocket.OPEN) {
               ws.send(JSON.stringify({ type: 'error', message: '消息发送失败' }))

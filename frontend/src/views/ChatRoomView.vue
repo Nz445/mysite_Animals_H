@@ -298,7 +298,7 @@ function connectSocket() {
       scrollBottom()
       return
     }
-    if (data.type === 'message' || data.type === 'system') {
+    if (data.type === 'message' || data.type === 'system' || data.type === 'refresh') {
       onlineCount.value = data.onlineCount || onlineCount.value
       await loadChatHistory()
       return
