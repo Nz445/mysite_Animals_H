@@ -123,6 +123,21 @@ async function validateToken() {
     return false
   }
 }
+
+async function loadChatHistory() {
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/chat/messages`, {
+      headers: { Authorization: `Bearer ${getToken()}` },
+    })
+    const data = await response.json()
+    if (!response.ok) throw new Error(data?.message || '加载历史失败')
+    messages.value = (data.messages || []).map(normalizeMessage)
+    scrollBottom()
+  } catch (error) {
+    console.error('loadChatHistory failed:', error)
+  }
+}
+
 // 登录
 async function handleLogin() {
   authError.value = ''
@@ -243,7 +258,10 @@ function connectSocket() {
 
 onMounted(async () => {
   const authed = await validateToken()
-  if (authed) connectSocket()
+  if (authed) {
+    await loadChatHistory()
+    connectSocket()
+  }
 })
 
 onBeforeUnmount(() => socket?.close())

@@ -23,6 +23,12 @@ const ensureChatMessagesTable = async () => {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `)
+
+  await pool.query(`
+    INSERT INTO chat_messages (nickname, text)
+    SELECT '系统', '欢迎来到社区聊天室，大家可以直接聊天。'
+    WHERE NOT EXISTS (SELECT 1 FROM chat_messages)
+  `)
 }
 
 const ensureUsersTable = async () => {
