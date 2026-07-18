@@ -4,16 +4,9 @@
 
     <main class="chat-main">
       <header class="chat-header glass-card">
-        <div class="chat-badge">Community Chat</div>
+   
         <h1>社区聊天室</h1>
-        <p>在线人数实时更新，系统消息和输入提示都会显示。</p>
-        <div class="chat-stats">
-          <span>在线：{{ onlineCount }}</span>
-          <span>系统消息：{{ systemCount }}</span>
-          <span>输入中：{{ typingText }}</span>
-          <span>连接：{{ connectionStatus }}</span>
-          <span>账号：{{ currentUser?.username || '未登录' }}</span>
-        </div>
+
       </header>
 
       <section class="chat-panel glass-card">
@@ -34,15 +27,31 @@
         </div>
 
         <div class="chat-messages" ref="messageListRef">
-          <div v-for="item in messages" :key="item.id" :class="['chat-message', item.type]">
-            <span class="chat-meta">{{ item.time || '' }}</span>
-            <strong class="chat-name" v-if="item.type !== 'system'">{{ item.nickname }}</strong>
-            <span class="chat-text">{{ item.text }}</span>
-          </div>
+          <template v-for="group in groupedMessages" :key="group.timeTitle + group.msgList[0].id">
+            <div v-if="group.timeTitle" class="chat-time-divider">
+              <span>{{ group.timeTitle }}</span>
+            </div>
+            <div
+              v-for="item in group.msgList"
+              :key="item.id"
+              :class="['chat-row', item.type === 'system' ? 'system-row' : item.nickname === currentUser?.username ? 'mine' : 'other']"
+            >
+              <template v-if="item.type === 'system'">
+                <div class="system-bubble">{{ item.text }}</div>
+              </template>
+              <template v-else>
+                <div class="bubble-wrap">
+                  <div class="bubble-name">{{ item.nickname }}</div>
+                  <div class="chat-bubble">
+                    <span class="chat-text">{{ item.text }}</span>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
         </div>
 
         <form class="chat-form" @submit.prevent="sendMessage">
-          <input v-model="nickname" maxlength="12" placeholder="昵称（可选）" :disabled="!isAuthed" />
           <input v-model="text" maxlength="200" placeholder="输入消息..." @input="onTyping" :disabled="!isAuthed" />
           <button type="submit" :disabled="!isAuthed">发送</button>
         </form>
@@ -75,10 +84,59 @@ let socket
 
 const systemCount = computed(() => messages.value.filter(item => item.type === 'system').length)
 const typingText = computed(() => typingUsers.value.length ? typingUsers.value.join('、') + ' 正在输入' : '无人')
+const groupedMessages = computed(() => groupChatMessage(messages.value))
+const TEN_MINUTE = 10 * 60 * 1000
+
+function parseChatTime(message) {
+  const source = message.created_at || message.time || ''
+  const date = new Date(source)
+  return Number.isNaN(date.getTime()) ? new Date() : date
+}
+
+function formatTime(date) {
+  const now = new Date()
+  const diffDay = Math.floor((now - date) / (1000 * 60 * 60 * 24))
+  if (diffDay === 0) {
+    return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+  } else if (diffDay === 1) {
+    return '昨天 ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+  } else if (diffDay <= 3) {
+    return date.toLocaleDateString('zh-CN', { weekday: 'long' }) + ' ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+  }
+  return date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+}
+
+function groupChatMessage(list) {
+  const groups = []
+  if (!list.length) return groups
+  const sorted = [...list].sort((a, b) => parseChatTime(a) - parseChatTime(b))
+  let currentGroup = { timeTitle: '', msgList: [sorted[0]] }
+  groups.push(currentGroup)
+  let prevTime = parseChatTime(sorted[0])
+
+  for (let i = 1; i < sorted.length; i++) {
+    const curr = sorted[i]
+    const currTime = parseChatTime(curr)
+    const isDiffDay = prevTime.toDateString() !== currTime.toDateString()
+    const diffMs = currTime - prevTime
+    const needSplit = isDiffDay || diffMs > TEN_MINUTE
+
+    if (needSplit) {
+      currentGroup.timeTitle = formatTime(prevTime)
+      currentGroup = { timeTitle: '', msgList: [] }
+      groups.push(currentGroup)
+    }
+    currentGroup.msgList.push(curr)
+    prevTime = currTime
+  }
+
+  groups[groups.length - 1].timeTitle = formatTime(parseChatTime(groups.at(-1).msgList[0]))
+  return groups
+}
 
 function normalizeMessage(message) {
   const time = message.time || message.created_at || ''
-  return { ...message, time }
+  return { ...message, time, _date: parseChatTime(message) }
 }
 
 function scrollBottom() {
@@ -239,11 +297,13 @@ function connectSocket() {
       onlineCount.value = data.onlineCount || 0
     }
     if (data.type === 'message') {
-      messages.value.push(normalizeMessage(data.message))
+      const nextMessages = [...messages.value.flatMap(group => group.msgList), normalizeMessage(data.message)]
+      messages.value = groupChatMessage(nextMessages)
       onlineCount.value = data.onlineCount || onlineCount.value
     }
     if (data.type === 'system') {
-      messages.value.push(normalizeMessage({ id: Date.now(), type: 'system', text: data.text, time: data.time }))
+      const nextMessages = [...messages.value.flatMap(group => group.msgList), normalizeMessage({ id: Date.now(), type: 'system', text: data.text, time: data.time })]
+      messages.value = groupChatMessage(nextMessages)
       onlineCount.value = data.onlineCount || onlineCount.value
     }
     if (data.type === 'typing') {
