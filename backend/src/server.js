@@ -320,6 +320,15 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // SPA 路由回退：前端 history 模式刷新时返回 index.html。
+  if (req.method === 'GET' && !url.pathname.startsWith('/api/') && !url.pathname.startsWith('/public/')) {
+    const accept = req.headers.accept || ''
+    if (accept.includes('text/html')) {
+      await serveStaticFile(res, 'index.html', origin)
+      return
+    }
+  }
+
   // 根路径返回简单文本，方便快速确认服务在线。
   if (url.pathname === '/') {
     sendText(res, 200, 'Animals_H backend is running', origin)

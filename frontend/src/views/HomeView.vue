@@ -42,7 +42,7 @@ const router = useRouter()
 const heroRef = ref(null)
 const navRef = ref(null)
 const loadingRef = ref(null)
-const showIntro = ref(true)
+const showIntro = ref(sessionStorage.getItem('home_intro_shown') !== '1')
 let resizeHandler
 
 const { playSplit, cleanup } = usePageIntro({ showIntro, loadingRef, navRef, heroRef })
@@ -58,7 +58,10 @@ onMounted(async () => {
   } catch (error) {
     console.error('加载首页数据失败：', error)
   }
-  playSplit()
+  if (showIntro.value) {
+    sessionStorage.setItem('home_intro_shown', '1')
+    playSplit()
+  }
 })
 onBeforeUnmount(() => {
   window.removeEventListener('resize', resizeHandler)
