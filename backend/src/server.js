@@ -45,6 +45,7 @@ const ensureUsersTable = async () => {
 
 const createToken = () => crypto.randomBytes(24).toString('hex')
 const hashPassword = (password) => crypto.createHash('sha256').update(password).digest('hex')
+const usernamePattern = /^[\u4e00-\u9fa5A-Za-z0-9_]+$/
 
 // 后端服务默认端口，可通过环境变量 PORT 覆盖。
 const PORT = process.env.PORT || 3000
@@ -157,23 +158,28 @@ const server = http.createServer(async (req, res) => {
       const data = await parseJsonBody(req)
       const username = String(data.username || '').trim()
       const password = String(data.password || '')
-      const confirmPassword = String(data.confirmPassword || '')
 
       // 验证用户名和密码是否为空
       if (!username || !password) {
         sendJson(res, 400, { ok: false, message: '用户名和密码不能为空' }, origin)
         return
       }
-      // 验证两次密码是否一致
-      if (password !== confirmPassword) {
-        sendJson(res, 400, { ok: false, message: '两次密码不一致' }, origin)
+      // 账号只能包含汉字、字母、数字和下划线
+      if (!usernamePattern.test(username)) {
+        sendJson(res, 400, { ok: false, message: '账号只能包含汉字、字母、数字和下划线' }, origin)
+        return
+      }
+
+      const existsResult = await pool.query('SELECT id FROM users WHERE username = $1 LIMIT 1', [username])
+      if (existsResult.rows[0]) {
+        sendJson(res, 400, { ok: false, message: '此账号已被注册' }, origin)
         return
       }
 
       const passwordHash = hashPassword(password)
       const token = createToken()
 
-       // 插入用户，并直接返回 token 给前端
+      // 插入用户，并直接返回 token 给前端
       const result = await pool.query(
         'INSERT INTO users (username, password_hash, token) VALUES ($1, $2, $3) RETURNING id, username, token, created_at',
         [username, passwordHash, token]

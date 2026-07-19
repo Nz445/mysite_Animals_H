@@ -1,9 +1,13 @@
 <template>
   <footer class="footer glass-card">
-    <div>
-      <div class="brand-name">萌宠档案</div>
-      <div class="footer-info">关爱每一只宠物，记录每一次相遇。</div>
+    <p>©2026 wsnz44 版权所有</p>
+    <div class="footer-beian">
+      <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">鲁ICP备2025193588号-1</a>
+      <a href="https://beian.miit.gov.cn/#/Integrated/recordQuery" target="_blank" rel="noopener noreferrer">鲁公网安备</a>
     </div>
-    <div class="footer-info">© 2025 Animals_H</div>
   </footer>
 </template>
+
+<script setup>
+import './SiteFooter.css'
+</script>
