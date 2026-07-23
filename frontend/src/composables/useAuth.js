@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.wsnz44.top'
+const rawApiBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL || 'https://api.wsnz44.top'
+const apiBaseUrl = rawApiBase.endsWith('/api') ? rawApiBase.slice(0, -4) : rawApiBase
 
 const TOKEN_KEY = 'chat_token'
 const USER_KEY = 'chat_user'
