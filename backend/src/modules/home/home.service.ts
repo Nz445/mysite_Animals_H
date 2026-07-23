@@ -5,23 +5,39 @@ import { PrismaService } from '../../database/prisma/prisma.service.js'
 export class HomeService {
   constructor(private readonly db: PrismaService) {}
 
+  private normalizePet(row: any) {
+    return {
+      id: row.id ?? null,
+      name: row.name ?? '',
+      type: row.type ?? '',
+      breed: row.breed ?? '',
+      age: row.age ?? '',
+      image: row.image ?? '',
+      tags: row.tags ?? [],
+      status: row.status ?? { text: '', color: 'gray' },
+    }
+  }
+
+  private normalizeHighlight(row: any) {
+    return {
+      id: row.id ?? null,
+      title: row.title ?? '',
+      description: row.description ?? '',
+      icon: row.icon ?? '',
+      color: row.color ?? 'blue',
+    }
+  }
+
   async getHomeData() {
     try {
       const [petsResult, highlightsResult] = await Promise.all([
-        this.db.pool.query(`
-          SELECT id, name, type, breed, age, image, tags, status
-          FROM pets
-          ORDER BY id ASC
-          LIMIT 20
-        `),
-        this.db.pool.query(`
-          SELECT id, title, description, icon, color
-          FROM highlights
-          ORDER BY id ASC
-          LIMIT 10
-        `),
+        this.db.pool.query(`SELECT * FROM pets ORDER BY id ASC LIMIT 20`),
+        this.db.pool.query(`SELECT * FROM highlights ORDER BY id ASC LIMIT 10`),
       ])
-      return { pets: petsResult.rows, highlights: highlightsResult.rows }
+      return {
+        pets: petsResult.rows.map((r) => this.normalizePet(r)),
+        highlights: highlightsResult.rows.map((r) => this.normalizeHighlight(r)),
+      }
     } catch (error) {
       console.error('[HomeService getHomeData error]', error)
       throw new Error(error instanceof Error ? error.message : String(error))
@@ -30,12 +46,8 @@ export class HomeService {
 
   async getPets() {
     try {
-      const result = await this.db.pool.query(`
-        SELECT id, name, type, breed, age, image, tags, status
-        FROM pets
-        ORDER BY id ASC
-      `)
-      return result.rows
+      const result = await this.db.pool.query(`SELECT * FROM pets ORDER BY id ASC`)
+      return result.rows.map((r) => this.normalizePet(r))
     } catch (error) {
       console.error('[HomeService getPets error]', error)
       throw new Error(error instanceof Error ? error.message : String(error))
@@ -44,12 +56,8 @@ export class HomeService {
 
   async getHighlights() {
     try {
-      const result = await this.db.pool.query(`
-        SELECT id, title, description, icon, color
-        FROM highlights
-        ORDER BY id ASC
-      `)
-      return result.rows
+      const result = await this.db.pool.query(`SELECT * FROM highlights ORDER BY id ASC`)
+      return result.rows.map((r) => this.normalizeHighlight(r))
     } catch (error) {
       console.error('[HomeService getHighlights error]', error)
       throw new Error(error instanceof Error ? error.message : String(error))
