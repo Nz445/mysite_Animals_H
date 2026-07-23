@@ -7,7 +7,7 @@ export class ChatService {
 
   async listMessages() {
     const result = await this.db.pool.query('SELECT id, nickname, text, created_at FROM chat_messages ORDER BY id ASC')
-    return result.rows.map((row) => ({
+    return result.rows.map((row: { id: number; nickname: string; text: string; created_at: string }) => ({
       ...row,
       time: row.time || (row.created_at ? new Date(row.created_at).toLocaleString('zh-CN', { hour12: false }) : ''),
     }))
