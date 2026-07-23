@@ -35,8 +35,8 @@ export class HomeService {
         this.db.pool.query(`SELECT * FROM highlights ORDER BY id ASC LIMIT 10`),
       ])
       return {
-        pets: petsResult.rows.map((r) => this.normalizePet(r)),
-        highlights: highlightsResult.rows.map((r) => this.normalizeHighlight(r)),
+        pets: petsResult.rows.map((r: any) => this.normalizePet(r)),
+        highlights: highlightsResult.rows.map((r: any) => this.normalizeHighlight(r)),
       }
     } catch (error) {
       console.error('[HomeService getHomeData error]', error)
@@ -47,7 +47,7 @@ export class HomeService {
   async getPets() {
     try {
       const result = await this.db.pool.query(`SELECT * FROM pets ORDER BY id ASC`)
-      return result.rows.map((r) => this.normalizePet(r))
+      return result.rows.map((r: any) => this.normalizePet(r))
     } catch (error) {
       console.error('[HomeService getPets error]', error)
       throw new Error(error instanceof Error ? error.message : String(error))
@@ -57,7 +57,7 @@ export class HomeService {
   async getHighlights() {
     try {
       const result = await this.db.pool.query(`SELECT * FROM highlights ORDER BY id ASC`)
-      return result.rows.map((r) => this.normalizeHighlight(r))
+      return result.rows.map((r: any) => this.normalizeHighlight(r))
     } catch (error) {
       console.error('[HomeService getHighlights error]', error)
       throw new Error(error instanceof Error ? error.message : String(error))
