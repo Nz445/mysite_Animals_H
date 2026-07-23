@@ -37,8 +37,7 @@
 
       <section class="section-title"><h2>宠物介绍</h2><p>每一只宠物都有自己的故事</p></section>
       <PetCardGrid :pets="pets" />
-      <SectionHighlights :items="highlights" />
-      <section class="notice-grid"><article class="notice-card warm"><h3>领养小提醒</h3><ul><li>先了解宠物性格与生活习惯</li><li>领养前与家人充分沟通</li><li>每一份陪伴都值得认真对待</li></ul></article><article class="notice-card calm"><h3>健康状态说明</h3><ul><li>已完成基础体检</li><li>疫苗记录完整</li><li>适合进入新家庭</li></ul></article></section>
+      
     </main>
     <SiteFooter />
   </div>
