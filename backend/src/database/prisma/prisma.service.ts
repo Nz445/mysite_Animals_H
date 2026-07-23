@@ -5,25 +5,20 @@ import { Pool } from 'pg'
 export class PrismaService implements OnModuleInit {
   private readonly connectionString =
     process.env.DATABASE_URL ||
-    (process.env.PGHOST && process.env.PGUSER
-      ? `postgresql://${encodeURIComponent(process.env.PGUSER)}:${encodeURIComponent(process.env.PGPASSWORD || '')}@${process.env.PGHOST}:${process.env.PGPORT || 5432}/${process.env.PGDATABASE || ''}`
+    (process.env.PGHOST && process.env.PGUSER && process.env.PGDATABASE
+      ? `postgresql://${encodeURIComponent(process.env.PGUSER)}:${encodeURIComponent(process.env.PGPASSWORD || '')}@${process.env.PGHOST}:${process.env.PGPORT || 5432}/${process.env.PGDATABASE}`
       : '')
 
-  readonly pool = this.connectionString
-    ? new Pool({ connectionString: this.connectionString })
-    : new Pool({
-        host: process.env.PGHOST,
-        port: process.env.PGPORT ? Number(process.env.PGPORT) : undefined,
-        user: process.env.PGUSER,
-        password: process.env.PGPASSWORD,
-        database: process.env.PGDATABASE,
-      })
+  readonly pool = new Pool({
+    connectionString: this.connectionString || undefined,
+    host: process.env.PGHOST,
+    port: process.env.PGPORT ? Number(process.env.PGPORT) : undefined,
+    user: process.env.PGUSER,
+    password: process.env.PGPASSWORD,
+    database: process.env.PGDATABASE,
+  })
 
   async onModuleInit() {
-    if (!this.connectionString && (!process.env.PGHOST || !process.env.PGUSER || process.env.PGPASSWORD === undefined || !process.env.PGDATABASE)) {
-      throw new Error('数据库配置缺失：请设置 DATABASE_URL，或设置 PGHOST、PGPORT、PGUSER、PGPASSWORD、PGDATABASE')
-    }
-
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS chat_messages (
         id SERIAL PRIMARY KEY,
