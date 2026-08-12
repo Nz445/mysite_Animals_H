@@ -77,12 +77,12 @@ export class PrismaService implements OnModuleInit {
     if (Number(petCount.rows[0].count) === 0) {
       await this.pool.query(`
         INSERT INTO pets (name, type, breed, age, image, tags, status) VALUES
-        ('小白', 'dog', '萨摩耶', '2岁', '', '[{"text":"温顺","color":"green"},{"text":"活泼","color":"yellow"}]'::jsonb, '{"text":"可领养","color":"green"}'::jsonb),
-        ('橘子', 'cat', '中华田园猫', '1岁', '', '[{"text":"粘人","color":"pink"},{"text":"贪吃","color":"orange"}]'::jsonb, '{"text":"等待领养","color":"yellow"}'::jsonb),
-        ('球球', 'rabbit', '荷兰垂耳兔', '6个月', '', '[{"text":"安静","color":"blue"},{"text":"胆小","color":"purple"}]'::jsonb, '{"text":"可领养","color":"green"}'::jsonb),
-        ('豆豆', 'dog', '柴犬', '3岁', '', '[{"text":"聪明","color":"blue"},{"text":"独立","color":"purple"}]'::jsonb, '{"text":"已领养","color":"gray"}'::jsonb),
-        ('咪咪', 'cat', '英国短毛猫', '2岁', '', '[{"text":"高冷","color":"purple"},{"text":"优雅","color":"pink"}]'::jsonb, '{"text":"可领养","color":"green"}'::jsonb),
-        ('毛毛', 'rabbit', '道奇兔', '1岁', '', '[{"text":"活泼","color":"yellow"},{"text":"好奇","color":"orange"}]'::jsonb, '{"text":"等待领养","color":"yellow"}'::jsonb)
+        ('小白', 'dog', '萨摩耶', '2岁', '/png/cat/1.png', '[{"text":"温顺","color":"green"},{"text":"活泼","color":"yellow"}]'::jsonb, '{"text":"可领养","color":"green"}'::jsonb),
+        ('橘子', 'cat', '中华田园猫', '1岁', '/png/cat/2.png', '[{"text":"粘人","color":"pink"},{"text":"贪吃","color":"orange"}]'::jsonb, '{"text":"等待领养","color":"yellow"}'::jsonb),
+        ('球球', 'rabbit', '荷兰垂耳兔', '6个月', '/png/cat/3.png', '[{"text":"安静","color":"blue"},{"text":"胆小","color":"purple"}]'::jsonb, '{"text":"可领养","color":"green"}'::jsonb),
+        ('豆豆', 'dog', '柴犬', '3岁', '/png/cat/4.png', '[{"text":"聪明","color":"blue"},{"text":"独立","color":"purple"}]'::jsonb, '{"text":"已领养","color":"gray"}'::jsonb),
+        ('咪咪', 'cat', '英国短毛猫', '2岁', '/png/cat/5.png', '[{"text":"高冷","color":"purple"},{"text":"优雅","color":"pink"}]'::jsonb, '{"text":"可领养","color":"green"}'::jsonb),
+        ('毛毛', 'rabbit', '道奇兔', '1岁', '/png/cat/6.png', '[{"text":"活泼","color":"yellow"},{"text":"好奇","color":"orange"}]'::jsonb, '{"text":"等待领养","color":"yellow"}'::jsonb)
       `)
     }
 
