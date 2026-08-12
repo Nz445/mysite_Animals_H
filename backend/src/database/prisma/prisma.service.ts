@@ -18,6 +18,8 @@ export class PrismaService implements OnModuleInit {
     database: process.env.PGDATABASE,
   })
 
+
+// 初始化数据库
   async onModuleInit() {
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS chat_messages (
@@ -28,6 +30,7 @@ export class PrismaService implements OnModuleInit {
       )
     `)
 
+    // 创建用户表
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -37,7 +40,7 @@ export class PrismaService implements OnModuleInit {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `)
-
+    // 创建宠物表
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS pets (
         id SERIAL PRIMARY KEY,
@@ -52,6 +55,7 @@ export class PrismaService implements OnModuleInit {
       )
     `)
 
+    // 创建高亮表
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS highlights (
         id SERIAL PRIMARY KEY,
